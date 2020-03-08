@@ -20,6 +20,7 @@ package com.generalbytes.batm.server.extensions.payment;
 import com.generalbytes.batm.server.extensions.IWallet;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * PaymentRequest is created and maintained by implementation of @{@link IPaymentSupport} of particular crypto currency based on @{@link IPaymentRequestSpecification}
@@ -55,6 +56,11 @@ public class PaymentRequest {
      */
     public static final int STATE_TRANSACTION_INVALID = 5;
 
+    /**
+     * Coins received after timeout.
+     */
+    public static final int STATE_SOMETHING_ARRIVED_AFTER_TIMEOUT = 6;
+
     private int state = STATE_NEW;
     private String description;
     private long validTill;
@@ -62,6 +68,7 @@ public class PaymentRequest {
     private String cryptoCurrency;
     private BigDecimal amount;
     private BigDecimal tolerance;
+    private boolean nonForwarding;
     private Object tag;
     private IPaymentRequestListener listener;
 
@@ -73,12 +80,16 @@ public class PaymentRequest {
 
     private BigDecimal txValue;
     private String incomingTransactionHash;
+    private String outgoingTransactionHash;
+    private String timeoutRefundAddress;
+    private List<IPaymentOutput> outputs;
+    private Integer paymentIndex;
 
     private boolean alreadyRefunded;
 
     private IWallet wallet;
 
-    public PaymentRequest(String cryptoCurrency, String description, long validTill, String address, BigDecimal amount, BigDecimal tolerance, int removeAfterNumberOfConfirmationsOfIncomingTransaction, int removeAfterNumberOfConfirmationsOfOutgoingTransaction, IWallet wallet) {
+    public PaymentRequest(String cryptoCurrency, String description, long validTill, String address, BigDecimal amount, BigDecimal tolerance, int removeAfterNumberOfConfirmationsOfIncomingTransaction, int removeAfterNumberOfConfirmationsOfOutgoingTransaction, IWallet wallet, String timeoutRefundAddress, List<IPaymentOutput> outputs, Boolean nonForwarding, Integer paymentIndex) {
         this.cryptoCurrency = cryptoCurrency;
         this.description = description;
         this.validTill = validTill;
@@ -87,8 +98,12 @@ public class PaymentRequest {
         this.removeAfterNumberOfConfirmationsOfIncomingTransaction = removeAfterNumberOfConfirmationsOfIncomingTransaction;
         this.removeAfterNumberOfConfirmationsOfOutgoingTransaction = removeAfterNumberOfConfirmationsOfOutgoingTransaction;
         this.tolerance = tolerance;
+        this.nonForwarding = Boolean.TRUE.equals(nonForwarding);
         txValue = BigDecimal.ZERO;
         this.wallet = wallet;
+        this.timeoutRefundAddress = timeoutRefundAddress;
+        this.outputs = outputs;
+        this.paymentIndex = paymentIndex;
     }
 
     /**
@@ -201,6 +216,14 @@ public class PaymentRequest {
         this.incomingTransactionHash = incomingTransactionHash;
     }
 
+    public String getOutgoingTransactionHash() {
+        return outgoingTransactionHash;
+    }
+
+    public void setOutgoingTransactionHash(String outgoingTransactionHash) {
+        this.outgoingTransactionHash = outgoingTransactionHash;
+    }
+
     @SuppressWarnings("all")
     public boolean wasAlreadyRefunded() {
         return alreadyRefunded;
@@ -209,6 +232,10 @@ public class PaymentRequest {
     @SuppressWarnings("all")
     public void setAsAlreadyRefunded() {
         this.alreadyRefunded = true;
+    }
+
+    public String getTimeoutRefundAddress() {
+        return timeoutRefundAddress;
     }
 
     @Override
@@ -274,5 +301,21 @@ public class PaymentRequest {
      */
     public IWallet getWallet() {
         return wallet;
+    }
+
+    public void setWallet(IWallet wallet) {
+        this.wallet = wallet;
+    }
+
+    public List<IPaymentOutput> getOutputs() {
+        return outputs;
+    }
+
+    public Integer getPaymentIndex() {
+        return paymentIndex;
+    }
+
+    public boolean isNonForwarding() {
+        return nonForwarding;
     }
 }
